@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge %}
+
+{% block body %}
+<div class="fb-dashboard-layout">
+    <aside class="fb-sidebar">
+        <div class="fb-sidebar-user">
+            <p class="fb-sidebar-name">{{ current_user.organization_name or current_user.name }}</p>
+            <p class="fb-sidebar-role">
+                {{ current_user.role|upper }}
+                {% if current_user.role == 'ngo' %}
+                    &middot; {{ status_badge(current_user.ngo_status) }}
+                {% endif %}
+            </p>
+            {% if current_user.district_name %}
+            <p class="fb-sidebar-role">{{ current_user.area_name }}, {{ current_user.district_name }}</p>
+            {% endif %}
+        </div>
+
+        <nav class="fb-sidebar-nav">
+            {% if current_user.role == 'donor' %}
+                <a href="{{ url_for('donor.dashboard') }}">Overview</a>
+                <a href="{{ url_for('donor.new_donation') }}">List Surplus Food</a>
+            {% elif current_user.role == 'ngo' %}
+                <a href="{{ url_for('ngo.dashboard') }}">Overview</a>
+                <a href="{{ url_for('ngo.browse') }}">Browse Available Food</a>
+                <a href="{{ url_for('ngo.requests_list') }}">My Requests</a>
+            {% elif current_user.role == 'admin' %}
+                <a href="{{ url_for('admin.dashboard') }}">Overview</a>
+                <a href="{{ url_for('admin.ngos') }}">NGO Approvals</a>
+                <a href="{{ url_for('admin.donations') }}">All Donations</a>
+                <a href="{{ url_for('admin.users') }}">Users</a>
+                <a href="{{ url_for('admin.locations') }}">Districts &amp; Areas</a>
+            {% endif %}
+            <a href="{{ url_for('notifications.list_notifications') }}">
+                Notifications
+                {% if unread_notifications_count %}
+                <span class="fb-badge-count">{{ unread_notifications_count }}</span>
+                {% endif %}
+            </a>
+            <a href="{{ url_for('auth.profile') }}">Profile Settings</a>
+        </nav>
+    </aside>
+
+    <section>
+        {% block dashboard_content %}{% endblock %}
+    </section>
+</div>
+{% endblock %}

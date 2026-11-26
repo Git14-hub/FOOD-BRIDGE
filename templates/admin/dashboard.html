@@ -1,0 +1,96 @@
+{% extends "dashboard_base.html" %}
+{% from "_macros.html" import csrf_field, stat_card, status_badge %}
+
+{% block title %}Admin Dashboard &mdash; FoodBridge{% endblock %}
+
+{% block dashboard_content %}
+<h1 class="page-title">Admin Dashboard</h1>
+<p class="page-subtitle">Verify NGO registrations and monitor surplus food distribution.</p>
+
+<div class="fb-stats-grid">
+    {{ stat_card("Total Donors", stats.total_donors or 0) }}
+    {{ stat_card("Approved NGOs", stats.approved_ngos or 0) }}
+    {{ stat_card("Pending NGOs", stats.pending_ngos or 0) }}
+    {{ stat_card("Total Donations", stats.total_donations or 0) }}
+    {{ stat_card("Distributed Pickups", stats.distributed_requests or 0) }}
+</div>
+
+<div class="fb-card">
+    <div class="fb-page-header" style="margin-bottom:12px;">
+        <h2 class="card-title" style="margin:0;">Pending NGO Approvals</h2>
+        <a href="{{ url_for('admin.ngos') }}">Manage all NGOs &rarr;</a>
+    </div>
+    {% if pending_ngos %}
+    <div class="fb-table-wrap">
+        <table class="fb-table">
+            <thead>
+                <tr>
+                    <th>Organization</th>
+                    <th>Reg. Number</th>
+                    <th>Location</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ngo in pending_ngos %}
+                <tr>
+                    <td>
+                        <strong>{{ ngo.organization_name }}</strong><br>
+                        <span class="fb-muted">{{ ngo.name }} &middot; {{ ngo.email }}</span>
+                    </td>
+                    <td>{{ ngo.registration_number }}</td>
+                    <td>{{ ngo.area_name }}, {{ ngo.district_name }}</td>
+                    <td>
+                        <div class="fb-inline-form">
+                            <form method="post" action="{{ url_for('admin.approve_ngo', ngo_id=ngo.id) }}">
+                                {{ csrf_field() }}
+                                <button type="submit" class="fb-btn fb-btn-sm">Approve</button>
+                            </form>
+                            <form method="post" action="{{ url_for('admin.reject_ngo', ngo_id=ngo.id) }}">
+                                {{ csrf_field() }}
+                                <button type="submit" class="fb-btn fb-btn-danger fb-btn-sm">Reject</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="fb-muted">No NGO accounts waiting for approval.</p>
+    {% endif %}
+</div>
+
+<div class="fb-card">
+    <h2 class="card-title">Recent Collection History</h2>
+    {% if recent_history %}
+    <div class="fb-table-wrap">
+        <table class="fb-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Donation</th>
+                    <th>Status</th>
+                    <th>Qty</th>
+                    <th>Actor</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for h in recent_history %}
+                <tr>
+                    <td class="fb-muted">{{ h.created_at }}</td>
+                    <td>{{ h.donation_title }}</td>
+                    <td>{{ status_badge(h.to_status) }}</td>
+                    <td>{{ h.quantity }}</td>
+                    <td>{{ h.actor_name or 'System' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="fb-muted">No activity recorded yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

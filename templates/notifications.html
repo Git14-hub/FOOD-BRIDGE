@@ -1,0 +1,64 @@
+{% extends "dashboard_base.html" %}
+{% from "_macros.html" import csrf_field %}
+
+{% block title %}Notifications &mdash; FoodBridge{% endblock %}
+
+{% block dashboard_content %}
+<div class="fb-page-header">
+    <div>
+        <h1 class="page-title">Notifications</h1>
+        <p class="page-subtitle">Updates about food listings, requests, and approvals.</p>
+    </div>
+    {% if notifications %}
+    <form method="post" action="{{ url_for('notifications.mark_all_read') }}">
+        {{ csrf_field() }}
+        <button type="submit" class="fb-btn fb-btn-secondary fb-btn-sm">Mark All Read</button>
+    </form>
+    {% endif %}
+</div>
+
+<div class="fb-card">
+    {% if notifications %}
+    <div class="fb-table-wrap">
+        <table class="fb-table">
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Notification</th>
+                    <th>Time</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for n in notifications %}
+                <tr>
+                    <td>
+                        {% if n.is_read %}
+                            <span class="fb-muted">Read</span>
+                        {% else %}
+                            <span class="status-badge status-pending">Unread</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <strong>{{ n.title }}</strong><br>
+                        <span class="fb-muted">{{ n.message }}</span>
+                    </td>
+                    <td class="fb-muted">{{ n.created_at }}</td>
+                    <td>
+                        <form method="post" action="{{ url_for('notifications.mark_read', notif_id=n.id) }}">
+                            {{ csrf_field() }}
+                            <button type="submit" class="fb-btn fb-btn-secondary fb-btn-sm">
+                                {% if n.link %}Open{% else %}Mark Read{% endif %}
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="fb-muted">No notifications yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

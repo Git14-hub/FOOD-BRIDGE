@@ -1,0 +1,59 @@
+{% extends "dashboard_base.html" %}
+{% from "_macros.html" import csrf_field, status_badge %}
+
+{% block title %}Users &mdash; FoodBridge{% endblock %}
+
+{% block dashboard_content %}
+<h1 class="page-title">Platform Users</h1>
+<p class="page-subtitle">View registered donors, NGOs, and administrators.</p>
+
+<div class="fb-card">
+    <div class="fb-table-wrap">
+        <table class="fb-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Location</th>
+                    <th>Account State</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users_list %}
+                <tr>
+                    <td>
+                        <strong>{{ u.organization_name or u.name }}</strong><br>
+                        <span class="fb-muted">{{ u.email }} &middot; {{ u.phone }}</span>
+                    </td>
+                    <td>
+                        {{ u.role|upper }}
+                        {% if u.role == 'ngo' %}<br>{{ status_badge(u.ngo_status) }}{% endif %}
+                    </td>
+                    <td>{{ u.area_name or '—' }}{% if u.district_name %}, {{ u.district_name }}{% endif %}</td>
+                    <td>
+                        {% if u.is_active %}
+                            <span class="status-badge status-approved">Active</span>
+                        {% else %}
+                            <span class="status-badge status-rejected">Disabled</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if u.id != current_user.id %}
+                        <form method="post" action="{{ url_for('admin.toggle_user_active', user_id=u.id) }}">
+                            {{ csrf_field() }}
+                            <button type="submit" class="fb-btn fb-btn-secondary fb-btn-sm">
+                                {% if u.is_active %}Disable{% else %}Enable{% endif %}
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="fb-muted">Current Admin</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

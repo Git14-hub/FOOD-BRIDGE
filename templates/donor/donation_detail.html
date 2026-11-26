@@ -1,0 +1,144 @@
+{% extends "dashboard_base.html" %}
+{% from "_macros.html" import csrf_field, status_badge %}
+
+{% block title %}{{ donation.title }} &mdash; FoodBridge{% endblock %}
+
+{% block dashboard_content %}
+<div class="fb-page-header">
+    <div>
+        <h1 class="page-title">{{ donation.title }}</h1>
+        <p class="page-subtitle">{{ donation.category }} &middot; {{ status_badge(donation.status) }}</p>
+    </div>
+    <div class="fb-inline-form">
+        {% if donation.status not in ('cancelled', 'expired', 'completed') %}
+        <a href="{{ url_for('donor.edit_donation', donation_id=donation.id) }}" class="fb-btn fb-btn-secondary fb-btn-sm">Edit Details</a>
+        <form method="post" action="{{ url_for('donor.cancel_donation_route', donation_id=donation.id) }}">
+            {{ csrf_field() }}
+            <button type="submit" class="fb-btn fb-btn-danger fb-btn-sm">Cancel Donation</button>
+        </form>
+        {% endif %}
+        <a href="{{ url_for('donor.dashboard') }}" class="fb-btn fb-btn-secondary fb-btn-sm">Back</a>
+    </div>
+</div>
+
+<div class="fb-card">
+    {% if donation.image_path %}
+    <div style="margin-bottom:16px;">
+        <img src="{{ url_for('static', filename=donation.image_path) }}" alt="{{ donation.title }}" class="fb-detail-photo">
+    </div>
+    {% endif %}
+    <dl class="fb-kv-list">
+        <div class="fb-kv-item">
+            <dt>Available / Total</dt>
+            <dd>{{ donation.available_quantity }} / {{ donation.total_quantity }} {{ donation.unit }}</dd>
+        </div>
+        <div class="fb-kv-item">
+            <dt>Location</dt>
+            <dd>{{ donation.area_name }}, {{ donation.district_name }}</dd>
+        </div>
+        <div class="fb-kv-item">
+            <dt>Pickup Address</dt>
+            <dd>{{ donation.pickup_address }}</dd>
+        </div>
+        <div class="fb-kv-item">
+            <dt>Expires At</dt>
+            <dd>{{ donation.expires_at }}</dd>
+        </div>
+    </dl>
+    {% if donation.description %}
+    <p style="margin-top:14px; margin-bottom:0;">{{ donation.description }}</p>
+    {% endif %}
+</div>
+
+<div class="fb-card">
+    <h2 class="card-title">NGO Requests</h2>
+    {% if requests_list %}
+    <div class="fb-table-wrap">
+        <table class="fb-table">
+            <thead>
+                <tr>
+                    <th>NGO</th>
+                    <th>Quantity</th>
+                    <th>Status</th>
+                    <th>Note</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in requests_list %}
+                <tr>
+                    <td>
+                        <strong>{{ req.ngo_name or req.ngo_contact }}</strong><br>
+                        <span class="fb-muted">{{ req.ngo_phone }}</span>
+                    </td>
+                    <td>{{ req.requested_quantity }} {{ donation.unit }}</td>
+                    <td>{{ status_badge(req.status) }}</td>
+                    <td class="fb-muted">{{ req.ngo_note or '—' }}</td>
+                    <td>
+                        <div class="fb-inline-form">
+                            {% if req.status == 'pending' %}
+                            <form method="post" action="{{ url_for('donor.approve_request', request_id=req.id) }}">
+                                {{ csrf_field() }}
+                                <button type="submit" class="fb-btn fb-btn-sm">Approve</button>
+                            </form>
+                            <form method="post" action="{{ url_for('donor.reject_request', request_id=req.id) }}">
+                                {{ csrf_field() }}
+                                <button type="submit" class="fb-btn fb-btn-danger fb-btn-sm">Reject</button>
+                            </form>
+                            {% elif req.status == 'approved' %}
+                            <form method="post" action="{{ url_for('donor.mark_ready', request_id=req.id) }}">
+                                {{ csrf_field() }}
+                                <button type="submit" class="fb-btn fb-btn-sm">Mark Ready</button>
+                            </form>
+                            {% elif req.status == 'ready' %}
+                            <form method="post" action="{{ url_for('donor.mark_collected', request_id=req.id) }}">
+                                {{ csrf_field() }}
+                                <button type="submit" class="fb-btn fb-btn-sm">Mark Collected</button>
+                            </form>
+                            {% else %}
+                            <span class="fb-muted">No action</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="fb-muted">No requests received for this listing yet.</p>
+    {% endif %}
+</div>
+
+<div class="fb-card">
+    <h2 class="card-title">Collection &amp; Status History</h2>
+    {% if history %}
+    <div class="fb-table-wrap">
+        <table class="fb-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Transition</th>
+                    <th>Qty</th>
+                    <th>Actor</th>
+                    <th>Note</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for h in history %}
+                <tr>
+                    <td class="fb-muted">{{ h.created_at }}</td>
+                    <td>{% if h.from_status %}{{ h.from_status }} &rarr; {% endif %}<strong>{{ h.to_status }}</strong></td>
+                    <td>{{ h.quantity }}</td>
+                    <td>{{ h.actor_name or 'System' }}</td>
+                    <td class="fb-muted">{{ h.note }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="fb-muted">No history entries yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

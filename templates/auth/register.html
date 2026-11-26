@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf_field, field_error %}
+
+{% block title %}Register &mdash; FoodBridge{% endblock %}
+
+{% block body %}
+<div class="fb-card" style="max-width:680px; margin:10px auto;">
+    <h1 class="page-title">Create an Account</h1>
+    <p class="page-subtitle">Register as a Food Donor or an NGO partner. Admin accounts are provisioned via CLI only.</p>
+
+    <form method="post" action="{{ url_for('auth.register') }}">
+        {{ csrf_field() }}
+
+        <div class="fb-field">
+            <label>Account Role</label>
+            <div style="display:flex; gap:18px; flex-wrap:wrap; margin-top:4px;">
+                <label style="display:inline-flex; align-items:center; gap:6px; font-weight:500;">
+                    <input type="radio" name="role" value="donor" data-ngo-toggle="1"
+                        {% if form_data.get('role', 'donor') == 'donor' %}checked{% endif %}>
+                    Food Donor
+                </label>
+                <label style="display:inline-flex; align-items:center; gap:6px; font-weight:500;">
+                    <input type="radio" name="role" value="ngo" data-ngo-toggle="1"
+                        {% if form_data.get('role') == 'ngo' %}checked{% endif %}>
+                    NGO (Requires Admin Approval)
+                </label>
+            </div>
+            {{ field_error(errors, 'role') }}
+        </div>
+
+        <div class="fb-form-grid">
+            <div class="fb-field">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" value="{{ form_data.get('name', '') }}" required>
+                {{ field_error(errors, 'name') }}
+            </div>
+            <div class="fb-field">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" value="{{ form_data.get('email', '') }}" required>
+                {{ field_error(errors, 'email') }}
+            </div>
+            <div class="fb-field">
+                <label for="phone">Phone Number</label>
+                <input type="text" id="phone" name="phone" value="{{ form_data.get('phone', '') }}" required>
+                {{ field_error(errors, 'phone') }}
+            </div>
+            <div class="fb-field">
+                <label for="address">Street Address</label>
+                <input type="text" id="address" name="address" value="{{ form_data.get('address', '') }}" required>
+                {{ field_error(errors, 'address') }}
+            </div>
+            <div class="fb-field">
+                <label for="reg-district">District</label>
+                <select id="reg-district" name="district_id" data-area-target="reg-area" required>
+                    <option value="">Select district</option>
+                    {% for d in districts %}
+                    <option value="{{ d.id }}" {% if form_data.get('district_id')|string == d.id|string %}selected{% endif %}>{{ d.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="fb-field">
+                <label for="reg-area">Area</label>
+                <select id="reg-area" name="area_id" required>
+                    <option value="">Select area</option>
+                    {% for a in areas %}
+                        {% if not form_data.get('district_id') or form_data.get('district_id')|string == a.district_id|string %}
+                        <option value="{{ a.id }}" {% if form_data.get('area_id')|string == a.id|string %}selected{% endif %}>{{ a.name }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                {{ field_error(errors, 'area_id') }}
+            </div>
+        </div>
+
+        <div id="ngo-only-fields" class="fb-card fb-card-soft" style="margin-top:6px;">
+            <div class="fb-form-grid">
+                <div class="fb-field" style="margin-bottom:0;">
+                    <label for="organization_name">NGO / Organization Name</label>
+                    <input type="text" id="organization_name" name="organization_name" value="{{ form_data.get('organization_name', '') }}">
+                    {{ field_error(errors, 'organization_name') }}
+                </div>
+                <div class="fb-field" style="margin-bottom:0;">
+                    <label for="registration_number">NGO Registration Number</label>
+                    <input type="text" id="registration_number" name="registration_number" value="{{ form_data.get('registration_number', '') }}">
+                    {{ field_error(errors, 'registration_number') }}
+                </div>
+            </div>
+        </div>
+
+        <div class="fb-form-grid">
+            <div class="fb-field">
+                <label for="password">Password (min 8 chars)</label>
+                <input type="password" id="password" name="password" required>
+                {{ field_error(errors, 'password') }}
+            </div>
+            <div class="fb-field">
+                <label for="confirm_password">Confirm Password</label>
+                <input type="password" id="confirm_password" name="confirm_password" required>
+                {{ field_error(errors, 'confirm_password') }}
+            </div>
+        </div>
+
+        <button type="submit" class="fb-btn">Create Account</button>
+    </form>
+</div>
+{% endblock %}

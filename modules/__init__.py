@@ -1,0 +1,1 @@
+"""FoodBridge Flask blueprints package."""

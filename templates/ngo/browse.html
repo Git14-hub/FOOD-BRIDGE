@@ -1,0 +1,63 @@
+{% extends "dashboard_base.html" %}
+{% from "_macros.html" import food_card %}
+
+{% block title %}Browse Food &mdash; FoodBridge{% endblock %}
+
+{% block dashboard_content %}
+<h1 class="page-title">Browse Available Food</h1>
+<p class="page-subtitle">Filter active surplus food donations by location, category, or keyword.</p>
+
+<div class="fb-card">
+    <form method="get" action="{{ url_for('ngo.browse') }}" class="fb-form-grid">
+        <div class="fb-field" style="margin-bottom:0;">
+            <label for="browse-district">District</label>
+            <select id="browse-district" name="district_id" data-area-target="browse-area">
+                <option value="">All districts</option>
+                {% for d in districts %}
+                <option value="{{ d.id }}" {% if selected_district|string == d.id|string %}selected{% endif %}>{{ d.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="fb-field" style="margin-bottom:0;">
+            <label for="browse-area">Area</label>
+            <select id="browse-area" name="area_id" data-include-all="1">
+                <option value="">All areas</option>
+                {% for a in areas %}
+                    {% if not selected_district or selected_district|string == a.district_id|string %}
+                    <option value="{{ a.id }}" {% if selected_area|string == a.id|string %}selected{% endif %}>{{ a.name }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+        <div class="fb-field" style="margin-bottom:0;">
+            <label for="category">Category</label>
+            <select id="category" name="category">
+                <option value="">All categories</option>
+                {% for cat in categories %}
+                <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="fb-field" style="margin-bottom:0;">
+            <label for="q">Keyword</label>
+            <input type="text" id="q" name="q" value="{{ search_q }}" placeholder="Search food...">
+        </div>
+        <div style="display:flex; align-items:flex-end; gap:8px;">
+            <button type="submit" class="fb-btn">Apply Filters</button>
+            <a href="{{ url_for('ngo.browse', district_id='') }}" class="fb-btn fb-btn-secondary">Reset</a>
+        </div>
+    </form>
+</div>
+
+{% if donations %}
+<div class="fb-cards-grid">
+    {% for d in donations %}
+        {{ food_card(d, url_for('ngo.donation_detail', donation_id=d.id), 'View & Request') }}
+    {% endfor %}
+</div>
+{% else %}
+<div class="fb-card">
+    <p class="fb-muted" style="margin:0;">No matching available food donations found.</p>
+</div>
+{% endif %}
+{% endblock %}

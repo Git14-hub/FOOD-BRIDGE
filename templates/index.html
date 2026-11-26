@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% from "_macros.html" import stat_card %}
+
+{% block title %}FoodBridge &mdash; Surplus Food Redistribution{% endblock %}
+
+{% block body %}
+<div class="fb-card">
+    <h1 class="page-title">Bridge surplus food to local communities</h1>
+    <p class="page-subtitle">
+        FoodBridge connects verified restaurants, caterers, and household donors with approved neighborhood NGOs so safe surplus food reaches people in need before it spoils.
+    </p>
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        {% if current_user %}
+            {% if current_user.role == 'donor' %}
+                <a href="{{ url_for('donor.dashboard') }}" class="fb-btn">Go to Donor Dashboard</a>
+                <a href="{{ url_for('donor.new_donation') }}" class="fb-btn fb-btn-secondary">List Surplus Food</a>
+            {% elif current_user.role == 'ngo' %}
+                <a href="{{ url_for('ngo.dashboard') }}" class="fb-btn">Go to NGO Dashboard</a>
+                <a href="{{ url_for('ngo.browse') }}" class="fb-btn fb-btn-secondary">Browse Available Food</a>
+            {% else %}
+                <a href="{{ url_for('admin.dashboard') }}" class="fb-btn">Go to Admin Dashboard</a>
+            {% endif %}
+        {% else %}
+            <a href="{{ url_for('auth.register') }}" class="fb-btn">Register as Donor or NGO</a>
+            <a href="{{ url_for('auth.login') }}" class="fb-btn fb-btn-secondary">Sign In</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="fb-stats-grid">
+    {{ stat_card("Total Donations Listed", stats.total_donations or 0) }}
+    {{ stat_card("Approved Partner NGOs", stats.approved_ngos or 0) }}
+    {{ stat_card("Completed Pickups", stats.completed_pickups or 0) }}
+</div>
+
+<div class="fb-cards-grid">
+    <div class="fb-card">
+        <h2 class="card-title">1. Donors list surplus food</h2>
+        <p class="fb-muted">Share quantity, food category, pickup address, and expiry deadline. Approved NGOs in the exact same district and area are notified right away.</p>
+    </div>
+    <div class="fb-card">
+        <h2 class="card-title">2. NGOs request what they need</h2>
+        <p class="fb-muted">Approved NGOs can reserve partial or full quantities while inventory is safely locked in real time.</p>
+    </div>
+    <div class="fb-card">
+        <h2 class="card-title">3. Tracked through distribution</h2>
+        <p class="fb-muted">Every handoff step&mdash;approved, ready, collected, and distributed&mdash;is recorded with full history and alerts.</p>
+    </div>
+</div>
+{% endblock %}

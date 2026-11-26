@@ -1,0 +1,84 @@
+{% extends "dashboard_base.html" %}
+{% from "_macros.html" import csrf_field, status_badge %}
+
+{% block title %}My Requests &mdash; FoodBridge{% endblock %}
+
+{% block dashboard_content %}
+<div class="fb-page-header">
+    <div>
+        <h1 class="page-title">My Food Requests</h1>
+        <p class="page-subtitle">Track approvals, pickups, and distribution status.</p>
+    </div>
+    <a href="{{ url_for('ngo.browse') }}" class="fb-btn fb-btn-sm">Browse More Food</a>
+</div>
+
+<div class="fb-card">
+    <form method="get" class="fb-inline-form" style="margin-bottom:14px;">
+        <label for="status" style="font-size:14px; font-weight:500;">Filter status:</label>
+        <select id="status" name="status" style="padding:7px 10px; border:1px solid var(--fb-border); border-radius:6px;">
+            <option value="">All</option>
+            {% for st in ['pending', 'approved', 'ready', 'collected', 'distributed', 'rejected', 'cancelled', 'expired'] %}
+            <option value="{{ st }}" {% if status_filter == st %}selected{% endif %}>{{ st|capitalize }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="fb-btn fb-btn-secondary fb-btn-sm">Filter</button>
+    </form>
+
+    {% if requests_list %}
+    <div class="fb-table-wrap">
+        <table class="fb-table">
+            <thead>
+                <tr>
+                    <th>Food Item</th>
+                    <th>Donor &amp; Address</th>
+                    <th>Qty</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in requests_list %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('ngo.donation_detail', donation_id=req.donation_id) }}">
+                            <strong>{{ req.donation_title }}</strong>
+                        </a><br>
+                        <span class="fb-muted">By {{ req.expires_at }}</span>
+                    </td>
+                    <td>
+                        {{ req.donor_name }} ({{ req.donor_phone }})<br>
+                        <span class="fb-muted">{{ req.pickup_address }}, {{ req.area_name }}</span>
+                    </td>
+                    <td>{{ req.requested_quantity }} {{ req.donation_unit }}</td>
+                    <td>{{ status_badge(req.status) }}</td>
+                    <td>
+                        <div class="fb-inline-form">
+                            {% if req.status == 'ready' %}
+                            <form method="post" action="{{ url_for('ngo.mark_collected', request_id=req.id) }}">
+                                {{ csrf_field() }}
+                                <button type="submit" class="fb-btn fb-btn-sm">Mark Collected</button>
+                            </form>
+                            {% elif req.status == 'collected' %}
+                            <form method="post" action="{{ url_for('ngo.mark_distributed', request_id=req.id) }}">
+                                {{ csrf_field() }}
+                                <button type="submit" class="fb-btn fb-btn-sm">Mark Distributed</button>
+                            </form>
+                            {% endif %}
+                            {% if req.status in ('pending', 'approved', 'ready') %}
+                            <form method="post" action="{{ url_for('ngo.cancel_my_request', request_id=req.id) }}">
+                                {{ csrf_field() }}
+                                <button type="submit" class="fb-btn fb-btn-danger fb-btn-sm">Cancel</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="fb-muted">No food requests found.</p>
+    {% endif %}
+</div>
+{% endblock %}

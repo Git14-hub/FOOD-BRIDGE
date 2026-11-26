@@ -1,0 +1,96 @@
+{% extends "dashboard_base.html" %}
+{% from "_macros.html" import csrf_field, food_card, stat_card, status_badge %}
+
+{% block title %}Donor Dashboard &mdash; FoodBridge{% endblock %}
+
+{% block dashboard_content %}
+<div class="fb-page-header">
+    <div>
+        <h1 class="page-title">Donor Dashboard</h1>
+        <p class="page-subtitle">Manage your surplus food listings and NGO pickup requests.</p>
+    </div>
+    <a href="{{ url_for('donor.new_donation') }}" class="fb-btn">+ List Surplus Food</a>
+</div>
+
+<div class="fb-stats-grid">
+    {{ stat_card("Total Listings", stats.total_donations or 0) }}
+    {{ stat_card("Active Listings", stats.active_donations or 0) }}
+    {{ stat_card("Pending Requests", pending_count) }}
+    {{ stat_card("Completed", stats.completed_donations or 0) }}
+</div>
+
+<div class="fb-card">
+    <h2 class="card-title">Active Pickup Requests</h2>
+    {% if incoming_requests %}
+    <div class="fb-table-wrap">
+        <table class="fb-table">
+            <thead>
+                <tr>
+                    <th>Donation</th>
+                    <th>NGO</th>
+                    <th>Quantity</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in incoming_requests %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('donor.donation_detail', donation_id=req.donation_id) }}">
+                            <strong>{{ req.donation_title }}</strong>
+                        </a>
+                    </td>
+                    <td>
+                        {{ req.ngo_name or req.ngo_contact }}<br>
+                        <span class="fb-muted">{{ req.ngo_phone }}</span>
+                    </td>
+                    <td>{{ req.requested_quantity }} {{ req.donation_unit }}</td>
+                    <td>{{ status_badge(req.status) }}</td>
+                    <td>
+                        <div class="fb-inline-form">
+                            {% if req.status == 'pending' %}
+                            <form method="post" action="{{ url_for('donor.approve_request', request_id=req.id) }}">
+                                {{ csrf_field() }}
+                                <button type="submit" class="fb-btn fb-btn-sm">Approve</button>
+                            </form>
+                            <form method="post" action="{{ url_for('donor.reject_request', request_id=req.id) }}">
+                                {{ csrf_field() }}
+                                <button type="submit" class="fb-btn fb-btn-danger fb-btn-sm">Reject</button>
+                            </form>
+                            {% elif req.status == 'approved' %}
+                            <form method="post" action="{{ url_for('donor.mark_ready', request_id=req.id) }}">
+                                {{ csrf_field() }}
+                                <button type="submit" class="fb-btn fb-btn-sm">Mark Ready</button>
+                            </form>
+                            {% elif req.status == 'ready' %}
+                            <form method="post" action="{{ url_for('donor.mark_collected', request_id=req.id) }}">
+                                {{ csrf_field() }}
+                                <button type="submit" class="fb-btn fb-btn-sm">Mark Collected</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="fb-muted">No open pickup requests right now.</p>
+    {% endif %}
+</div>
+
+<div class="fb-card">
+    <h2 class="card-title">Your Food Donations</h2>
+    {% if donations %}
+    <div class="fb-cards-grid">
+        {% for d in donations %}
+            {{ food_card(d, url_for('donor.donation_detail', donation_id=d.id), 'Manage Listing') }}
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="fb-muted">You have not listed any donations yet. Click <strong>List Surplus Food</strong> to start.</p>
+    {% endif %}
+</div>
+{% endblock %}

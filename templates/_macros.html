@@ -1,0 +1,60 @@
+{% macro csrf_field() %}
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{% endmacro %}
+
+{% macro status_badge(status) %}
+<span class="status-badge status-{{ status|lower }}">{{ status.replace('_', ' ') }}</span>
+{% endmacro %}
+
+{% macro stat_card(label, value, subtitle='') %}
+<div class="stat">
+    <p class="stat-label">{{ label }}</p>
+    <p class="stat-value">{{ value }}</p>
+    {% if subtitle %}
+    <p class="stat-sub">{{ subtitle }}</p>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro field_error(errors, name) %}
+{% if errors and errors.get(name) %}
+<div class="fb-field-error">{{ errors.get(name) }}</div>
+{% endif %}
+{% endmacro %}
+
+{% macro flash_messages() %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="fb-alert fb-alert-{{ category }}" role="alert">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+{% endmacro %}
+
+{% macro food_card(donation, action_url, action_label='View Details') %}
+<article class="food-card">
+    {% if donation.image_path %}
+    <img src="{{ url_for('static', filename=donation.image_path) }}" alt="{{ donation.title }}" class="food-card-img">
+    {% endif %}
+    <div class="food-card-body">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+            <h3 class="card-title" style="margin:0;">{{ donation.title }}</h3>
+            {{ status_badge(donation.status) }}
+        </div>
+        <div class="food-card-meta">{{ donation.category }}</div>
+        <div>
+            <strong>{{ donation.available_quantity }}</strong> / {{ donation.total_quantity }} {{ donation.unit }} available
+        </div>
+        <div class="food-card-meta">
+            {{ donation.area_name }}, {{ donation.district_name }}
+        </div>
+        <div class="food-card-meta">
+            Pickup by: {{ donation.expires_at }}
+        </div>
+        <div class="food-card-actions">
+            <a href="{{ action_url }}" class="fb-btn fb-btn-sm">{{ action_label }}</a>
+        </div>
+    </div>
+</article>
+{% endmacro %}

@@ -1,0 +1,78 @@
+{% extends "dashboard_base.html" %}
+{% from "_macros.html" import food_card, stat_card, status_badge %}
+
+{% block title %}NGO Dashboard &mdash; FoodBridge{% endblock %}
+
+{% block dashboard_content %}
+<div class="fb-page-header">
+    <div>
+        <h1 class="page-title">NGO Dashboard</h1>
+        <p class="page-subtitle">Browse surplus food in your neighborhood and track pickups.</p>
+    </div>
+    <a href="{{ url_for('ngo.browse') }}" class="fb-btn">Browse Available Food</a>
+</div>
+
+{% if current_user.ngo_status == 'pending' %}
+<div class="fb-alert fb-alert-warning">
+    <strong>Pending Admin Approval:</strong> Your NGO registration is currently under review. You can browse listings, and requesting will unlock once an administrator approves your organization.
+</div>
+{% elif current_user.ngo_status == 'rejected' %}
+<div class="fb-alert fb-alert-error">
+    <strong>NGO Verification Rejected:</strong> {{ current_user.rejection_reason or 'Please contact an administrator.' }}
+</div>
+{% endif %}
+
+<div class="fb-stats-grid">
+    {{ stat_card("Total Requests", stats.total_requests or 0) }}
+    {{ stat_card("Active Pickups", stats.active_requests or 0) }}
+    {{ stat_card("Distributed", stats.distributed_count or 0) }}
+</div>
+
+<div class="fb-card">
+    <div class="fb-page-header" style="margin-bottom:12px;">
+        <h2 class="card-title" style="margin:0;">Available in Your Area ({{ current_user.area_name }})</h2>
+        <a href="{{ url_for('ngo.browse') }}">View all &rarr;</a>
+    </div>
+    {% if nearby_donations %}
+    <div class="fb-cards-grid">
+        {% for d in nearby_donations %}
+            {{ food_card(d, url_for('ngo.donation_detail', donation_id=d.id), 'View & Request') }}
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="fb-muted">No active donations in your area right now. Try <a href="{{ url_for('ngo.browse') }}">browsing all districts</a>.</p>
+    {% endif %}
+</div>
+
+<div class="fb-card">
+    <h2 class="card-title">Recent Requests</h2>
+    {% if my_requests %}
+    <div class="fb-table-wrap">
+        <table class="fb-table">
+            <thead>
+                <tr>
+                    <th>Food Item</th>
+                    <th>Donor</th>
+                    <th>Qty</th>
+                    <th>Status</th>
+                    <th>Pickup By</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in my_requests %}
+                <tr>
+                    <td><a href="{{ url_for('ngo.donation_detail', donation_id=req.donation_id) }}">{{ req.donation_title }}</a></td>
+                    <td>{{ req.donor_name }} ({{ req.donor_phone }})</td>
+                    <td>{{ req.requested_quantity }} {{ req.donation_unit }}</td>
+                    <td>{{ status_badge(req.status) }}</td>
+                    <td class="fb-muted">{{ req.expires_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="fb-muted">You have not requested any food yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

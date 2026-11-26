@@ -1,0 +1,70 @@
+{% extends "dashboard_base.html" %}
+{% from "_macros.html" import csrf_field, status_badge %}
+
+{% block title %}NGO Approvals &mdash; FoodBridge{% endblock %}
+
+{% block dashboard_content %}
+<h1 class="page-title">NGO Verification &amp; Approvals</h1>
+<p class="page-subtitle">Only approved NGOs receive area alerts and can request food donations.</p>
+
+<div class="fb-card">
+    <form method="get" class="fb-inline-form" style="margin-bottom:14px;">
+        <label for="status" style="font-size:14px; font-weight:500;">Filter:</label>
+        <select id="status" name="status" style="padding:7px 10px; border:1px solid var(--fb-border); border-radius:6px;">
+            <option value="">All NGOs</option>
+            <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+            <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+            <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+        </select>
+        <button type="submit" class="fb-btn fb-btn-secondary fb-btn-sm">Apply</button>
+    </form>
+
+    {% if ngo_list %}
+    <div class="fb-table-wrap">
+        <table class="fb-table">
+            <thead>
+                <tr>
+                    <th>Organization</th>
+                    <th>Registration</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ngo in ngo_list %}
+                <tr>
+                    <td>
+                        <strong>{{ ngo.organization_name }}</strong><br>
+                        <span class="fb-muted">{{ ngo.name }} &middot; {{ ngo.email }} &middot; {{ ngo.phone }}</span>
+                    </td>
+                    <td>{{ ngo.registration_number }}</td>
+                    <td>{{ ngo.area_name }}, {{ ngo.district_name }}</td>
+                    <td>{{ status_badge(ngo.ngo_status) }}</td>
+                    <td>
+                        <div class="fb-inline-form">
+                            {% if ngo.ngo_status != 'approved' %}
+                            <form method="post" action="{{ url_for('admin.approve_ngo', ngo_id=ngo.id) }}">
+                                {{ csrf_field() }}
+                                <button type="submit" class="fb-btn fb-btn-sm">Approve</button>
+                            </form>
+                            {% endif %}
+                            {% if ngo.ngo_status != 'rejected' %}
+                            <form method="post" action="{{ url_for('admin.reject_ngo', ngo_id=ngo.id) }}" class="fb-inline-form">
+                                {{ csrf_field() }}
+                                <input type="text" name="reason" placeholder="Reason (optional)" style="padding:5px 8px; border:1px solid var(--fb-border); border-radius:6px; font-size:13px;">
+                                <button type="submit" class="fb-btn fb-btn-danger fb-btn-sm">Reject</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="fb-muted">No NGOs found.</p>
+    {% endif %}
+</div>
+{% endblock %}

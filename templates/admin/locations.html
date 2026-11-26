@@ -1,0 +1,68 @@
+{% extends "dashboard_base.html" %}
+{% from "_macros.html" import csrf_field %}
+
+{% block title %}Districts &amp; Areas &mdash; FoodBridge{% endblock %}
+
+{% block dashboard_content %}
+<h1 class="page-title">Districts &amp; Areas</h1>
+<p class="page-subtitle">Manage service locations used for matching donors and local NGOs.</p>
+
+<div class="fb-form-grid">
+    <div class="fb-card">
+        <h2 class="card-title">Add District</h2>
+        <form method="post" action="{{ url_for('admin.locations') }}">
+            {{ csrf_field() }}
+            <input type="hidden" name="kind" value="district">
+            <div class="fb-field">
+                <label for="dist-name">District Name</label>
+                <input type="text" id="dist-name" name="name" required>
+            </div>
+            <button type="submit" class="fb-btn">Add District</button>
+        </form>
+    </div>
+
+    <div class="fb-card">
+        <h2 class="card-title">Add Area</h2>
+        <form method="post" action="{{ url_for('admin.locations') }}">
+            {{ csrf_field() }}
+            <input type="hidden" name="kind" value="area">
+            <div class="fb-field">
+                <label for="area-dist">District</label>
+                <select id="area-dist" name="district_id" required>
+                    <option value="">Select district</option>
+                    {% for d in districts %}
+                    <option value="{{ d.id }}">{{ d.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="fb-field">
+                <label for="area-name">Area Name</label>
+                <input type="text" id="area-name" name="name" required>
+            </div>
+            <button type="submit" class="fb-btn">Add Area</button>
+        </form>
+    </div>
+</div>
+
+<div class="fb-card">
+    <h2 class="card-title">Configured Areas</h2>
+    <div class="fb-table-wrap">
+        <table class="fb-table">
+            <thead>
+                <tr>
+                    <th>District</th>
+                    <th>Area</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in areas %}
+                <tr>
+                    <td>{{ a.district_name }}</td>
+                    <td>{{ a.name }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

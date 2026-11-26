@@ -1,0 +1,42 @@
+{% extends "dashboard_base.html" %}
+{% from "_macros.html" import status_badge %}
+
+{% block title %}All Donations &mdash; FoodBridge{% endblock %}
+
+{% block dashboard_content %}
+<h1 class="page-title">All Donations</h1>
+<p class="page-subtitle">Platform-wide overview of all listed surplus food donations.</p>
+
+<div class="fb-card">
+    {% if donations %}
+    <div class="fb-table-wrap">
+        <table class="fb-table">
+            <thead>
+                <tr>
+                    <th>Food Title</th>
+                    <th>Donor</th>
+                    <th>Location</th>
+                    <th>Available / Total</th>
+                    <th>Expires</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in donations %}
+                <tr>
+                    <td><strong>{{ d.title }}</strong><br><span class="fb-muted">{{ d.category }}</span></td>
+                    <td>{{ d.donor_name }}</td>
+                    <td>{{ d.area_name }}, {{ d.district_name }}</td>
+                    <td>{{ d.available_quantity }} / {{ d.total_quantity }} {{ d.unit }}</td>
+                    <td class="fb-muted">{{ d.expires_at }}</td>
+                    <td>{{ status_badge(d.status) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="fb-muted">No donations listed yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}{{ code }} {{ title }} &mdash; FoodBridge{% endblock %}
+
+{% block body %}
+<div class="fb-card" style="max-width:600px; margin:24px auto;">
+    <h1 class="page-title">{{ code }} &mdash; {{ title }}</h1>
+    <p class="fb-muted">{{ message }}</p>
+    <a href="{{ url_for('auth.index') }}" class="fb-btn">Return Home</a>
+</div>
+{% endblock %}

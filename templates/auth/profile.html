@@ -1,0 +1,87 @@
+{% extends "dashboard_base.html" %}
+{% from "_macros.html" import csrf_field, field_error %}
+
+{% block title %}Profile Settings &mdash; FoodBridge{% endblock %}
+
+{% block dashboard_content %}
+<h1 class="page-title">Profile Settings</h1>
+<p class="page-subtitle">Keep your contact details and district/area up to date.</p>
+
+<div class="fb-card">
+    <h2 class="card-title">Account Information</h2>
+    <form method="post" action="{{ url_for('auth.profile') }}">
+        {{ csrf_field() }}
+        <input type="hidden" name="action" value="update_profile">
+        <div class="fb-form-grid">
+            <div class="fb-field">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" value="{{ form_data.get('name', '') }}" required>
+                {{ field_error(errors, 'name') }}
+            </div>
+            <div class="fb-field">
+                <label for="phone">Phone</label>
+                <input type="text" id="phone" name="phone" value="{{ form_data.get('phone', '') }}" required>
+                {{ field_error(errors, 'phone') }}
+            </div>
+            <div class="fb-field">
+                <label for="address">Address</label>
+                <input type="text" id="address" name="address" value="{{ form_data.get('address', '') }}" required>
+                {{ field_error(errors, 'address') }}
+            </div>
+            <div class="fb-field">
+                <label for="organization_name">Organization Name</label>
+                <input type="text" id="organization_name" name="organization_name" value="{{ form_data.get('organization_name', '') }}">
+                {{ field_error(errors, 'organization_name') }}
+            </div>
+            <div class="fb-field">
+                <label for="prof-district">District</label>
+                <select id="prof-district" name="district_id" data-area-target="prof-area" required>
+                    <option value="">Select district</option>
+                    {% for d in districts %}
+                    <option value="{{ d.id }}" {% if form_data.get('district_id')|string == d.id|string %}selected{% endif %}>{{ d.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="fb-field">
+                <label for="prof-area">Area</label>
+                <select id="prof-area" name="area_id" required>
+                    <option value="">Select area</option>
+                    {% for a in areas %}
+                        {% if not form_data.get('district_id') or form_data.get('district_id')|string == a.district_id|string %}
+                        <option value="{{ a.id }}" {% if form_data.get('area_id')|string == a.id|string %}selected{% endif %}>{{ a.name }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                {{ field_error(errors, 'area_id') }}
+            </div>
+        </div>
+        <button type="submit" class="fb-btn">Save Profile</button>
+    </form>
+</div>
+
+<div class="fb-card">
+    <h2 class="card-title">Change Password</h2>
+    <form method="post" action="{{ url_for('auth.profile') }}">
+        {{ csrf_field() }}
+        <input type="hidden" name="action" value="change_password">
+        <div class="fb-form-grid">
+            <div class="fb-field">
+                <label for="current_password">Current Password</label>
+                <input type="password" id="current_password" name="current_password" required>
+                {{ field_error(errors, 'current_password') }}
+            </div>
+            <div class="fb-field">
+                <label for="new_password">New Password</label>
+                <input type="password" id="new_password" name="new_password" required>
+                {{ field_error(errors, 'new_password') }}
+            </div>
+            <div class="fb-field">
+                <label for="confirm_password">Confirm New Password</label>
+                <input type="password" id="confirm_password" name="confirm_password" required>
+                {{ field_error(errors, 'confirm_password') }}
+            </div>
+        </div>
+        <button type="submit" class="fb-btn fb-btn-secondary">Update Password</button>
+    </form>
+</div>
+{% endblock %}

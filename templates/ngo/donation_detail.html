@@ -1,0 +1,110 @@
+{% extends "dashboard_base.html" %}
+{% from "_macros.html" import csrf_field, field_error, status_badge %}
+
+{% block title %}{{ donation.title }} &mdash; FoodBridge{% endblock %}
+
+{% block dashboard_content %}
+<div class="fb-page-header">
+    <div>
+        <h1 class="page-title">{{ donation.title }}</h1>
+        <p class="page-subtitle">{{ donation.category }} &middot; {{ status_badge(donation.status) }}</p>
+    </div>
+    <a href="{{ url_for('ngo.browse') }}" class="fb-btn fb-btn-secondary fb-btn-sm">Back to Browse</a>
+</div>
+
+<div class="fb-card">
+    {% if donation.image_path %}
+    <div style="margin-bottom:16px;">
+        <img src="{{ url_for('static', filename=donation.image_path) }}" alt="{{ donation.title }}" class="fb-detail-photo">
+    </div>
+    {% endif %}
+    <dl class="fb-kv-list">
+        <div class="fb-kv-item">
+            <dt>Available Quantity</dt>
+            <dd><strong>{{ donation.available_quantity }}</strong> / {{ donation.total_quantity }} {{ donation.unit }}</dd>
+        </div>
+        <div class="fb-kv-item">
+            <dt>Donor</dt>
+            <dd>{{ donation.donor_org or donation.donor_name }} ({{ donation.donor_phone }})</dd>
+        </div>
+        <div class="fb-kv-item">
+            <dt>Location</dt>
+            <dd>{{ donation.area_name }}, {{ donation.district_name }}</dd>
+        </div>
+        <div class="fb-kv-item">
+            <dt>Pickup Address</dt>
+            <dd>{{ donation.pickup_address }}</dd>
+        </div>
+        <div class="fb-kv-item">
+            <dt>Pickup Deadline</dt>
+            <dd>{{ donation.expires_at }}</dd>
+        </div>
+    </dl>
+    {% if donation.description %}
+    <p style="margin-top:14px; margin-bottom:0;">{{ donation.description }}</p>
+    {% endif %}
+</div>
+
+<div class="fb-card">
+    <h2 class="card-title">Request Food Quantity</h2>
+    {% if current_user.ngo_status != 'approved' %}
+        <div class="fb-alert fb-alert-warning" style="margin-bottom:0;">
+            Your NGO account status is <strong>{{ current_user.ngo_status }}</strong>. Only admin-approved NGOs can submit food requests.
+        </div>
+    {% elif donation.status not in ('available', 'partially_reserved') %}
+        <p class="fb-muted" style="margin:0;">This donation is no longer accepting new requests (status: {{ donation.status }}).</p>
+    {% else %}
+        {% if errors.get('form') %}
+        <div class="fb-alert fb-alert-error">{{ errors.get('form') }}</div>
+        {% endif %}
+        <form method="post" action="{{ url_for('ngo.submit_request', donation_id=donation.id) }}">
+            {{ csrf_field() }}
+            <div class="fb-form-grid">
+                <div class="fb-field">
+                    <label for="requested_quantity">Quantity Needed (max {{ donation.available_quantity }} {{ donation.unit }})</label>
+                    <input type="number" step="0.01" min="0.01" max="{{ donation.available_quantity }}"
+                           id="requested_quantity" name="requested_quantity"
+                           value="{{ form_data.get('requested_quantity', '') }}" required>
+                    {{ field_error(errors, 'requested_quantity') }}
+                </div>
+                <div class="fb-field">
+                    <label for="ngo_note">Pickup Note (optional)</label>
+                    <input type="text" id="ngo_note" name="ngo_note" value="{{ form_data.get('ngo_note', '') }}" placeholder="e.g. Volunteer arriving at 5 PM">
+                    {{ field_error(errors, 'ngo_note') }}
+                </div>
+            </div>
+            <button type="submit" class="fb-btn">Submit Request</button>
+        </form>
+    {% endif %}
+</div>
+
+{% if my_requests %}
+<div class="fb-card">
+    <h2 class="card-title">Your Requests on This Donation</h2>
+    <div class="fb-table-wrap">
+        <table class="fb-table">
+            <thead>
+                <tr>
+                    <th>Quantity</th>
+                    <th>Status</th>
+                    <th>Your Note</th>
+                    <th>Donor Note</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in my_requests %}
+                <tr>
+                    <td>{{ r.requested_quantity }} {{ donation.unit }}</td>
+                    <td>{{ status_badge(r.status) }}</td>
+                    <td class="fb-muted">{{ r.ngo_note or '—' }}</td>
+                    <td class="fb-muted">{{ r.donor_note or '—' }}</td>
+                    <td class="fb-muted">{{ r.created_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
